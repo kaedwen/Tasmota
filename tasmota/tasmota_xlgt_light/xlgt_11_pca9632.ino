@@ -27,12 +27,16 @@
 
 #define XLGT_11             11
 
+#ifndef USE_PCA9632_LST
+  #define USE_PCA9632_LST LST_RGBW
+#endif
+
 /********************************************************************************************/
 
 bool PCA9632_SetChannels(void) {
   uint8_t *cur_col = (uint8_t*)XdrvMailbox.data;
 
-  DEBUG_TRACE_LOG(PSTR("LGT: PCA9632 %d - %d - %d - %d"), cur_col[0], cur_col[1], cur_col[2], cur_col[3]);
+  AddLog(LOG_LEVEL_INFO, PSTR("LGT: PCA9632 %d - %d - %d - %d"), cur_col[0], cur_col[1], cur_col[2], cur_col[3]);
 
   PCA9632_Enable(PCA9632_SetPWM_Bulk(cur_col, 4));
 
@@ -40,12 +44,10 @@ bool PCA9632_SetChannels(void) {
 }
 
 bool PCA9632_ModuleSelected(void) {
-  DEBUG_TRACE_LOG(PSTR("LGT: PCA9632 ModuleSelected"));
-
   if (PCA9632_Detect()) {
     PCA9632_Init();
 
-    TasmotaGlobal.light_type += LST_RGBW;    // Add RGBW to be controlled by PCA9632
+    TasmotaGlobal.light_type += USE_PCA9632_LST;    // Add RGB[W] or SINGLE to be controlled by PCA9632
     TasmotaGlobal.light_driver = XLGT_11;
 
     AddLog(LOG_LEVEL_INFO, PSTR("LGT: PCA9632 Found"));
@@ -63,6 +65,8 @@ bool PCA9632_ModuleSelected(void) {
 bool Xlgt11(uint32_t function) {
   bool result = false;
 
+  AddLog(LOG_LEVEL_INFO, PSTR("LGT: PCA9632 Xlgt11 F%d"), function);
+
   switch (function) {
     case FUNC_SET_CHANNELS:
       result = PCA9632_SetChannels();
@@ -71,6 +75,7 @@ bool Xlgt11(uint32_t function) {
       result = PCA9632_ModuleSelected();
       break;
   }
+
   return result;
 }
 
